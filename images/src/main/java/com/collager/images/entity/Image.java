@@ -32,9 +32,8 @@ public class Image {
     @Column(name="url", nullable = false)
     private String url;
 
-    @OneToMany(mappedBy="image", cascade = CascadeType.ALL)
-    @OrderBy("name ASC")
-    private List<Tag> objects;
+    @Column(name="objects")
+    private String objects;
 
     @Override
     public boolean equals(Object o) {
