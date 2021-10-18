@@ -10,10 +10,10 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @ExtendWith(SpringExtension.class)
 @DataJpaTest()
@@ -68,6 +68,22 @@ public class ImageRepositoryTests {
 
         List<Image> imgs = imageRepository.findImagesByObject("a", "book");
         assertEquals(2, imgs.size());
+    }
+
+    @Test
+    public void testDeleteById(){
+        Image img = new Image();
+        img.setAccount("a");
+        img.setLabel("testLabel");
+        img.setUrl("img_url");
+        img.setObjects("book,apple");
+        img = imageRepository.save(img);
+
+        Image i = imageRepository.getById("a", img.getId());
+        imageRepository.deleteById(img.getId());
+        Image k = imageRepository.getById("a", img.getId());
+        assertEquals(i.getId(), img.getId());
+        assertNull(k);
     }
 
 }

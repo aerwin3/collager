@@ -6,13 +6,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 
 import java.util.UUID;
 
-import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ImageServiceTests {
@@ -41,6 +42,10 @@ public class ImageServiceTests {
         assertNull(imageService.getImage("acct", uuid.toString()));
     }
 
-
-
+    @Test
+    public void deleteImageTest(){
+        UUID uuid = UUID.randomUUID();
+        imageService.removeImage("acct", uuid.toString());
+        verify(imageRepository, Mockito.times(1)).deleteById(uuid);
+    }
 }

@@ -47,7 +47,13 @@ public class ImageService {
             log.info("Image Created :: " + img);
        }catch (Exception e){
            log.error(e);
+           return null;
        }
         return img;
+    }
+
+    public void removeImage(String acct, String id) {
+        imageRepository.deleteById(UUID.fromString(id));
+        log.info("Image " + id +" removed from account " + acct);
     }
 }
