@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @ExtendWith(SpringExtension.class)
 @DataJpaTest()
 @AutoConfigureTestDatabase(replace= AutoConfigureTestDatabase.Replace.NONE)
-@TestPropertySource("/application.properties")
+@TestPropertySource("/test-application.properties")
 public class ImageRepositoryTests {
 
     @Autowired

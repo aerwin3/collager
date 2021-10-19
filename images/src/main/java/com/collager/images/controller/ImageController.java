@@ -9,16 +9,18 @@ import lombok.Setter;
 import lombok.ToString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.*;
 
 @Controller
 public class ImageController {
+
 
     private ImageService imageService;
 
@@ -30,9 +32,8 @@ public class ImageController {
     }
 
     @GetMapping(value = "/images", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> listImages(
-            @RequestHeader("X-Account-Id") String account,
-            @RequestParam HashMap<String, Object> params) {
+    public ResponseEntity<?> listImages(@RequestHeader("X-Account-Id") String account,
+                                        @RequestParam HashMap<String, Object> params) {
         HashMap<String, Object> imageResponse = new HashMap<>();
         Set<Image> images = new HashSet<>();
         if (params.get("objects") != null) {
@@ -45,11 +46,13 @@ public class ImageController {
         return ResponseEntity.ok(imageResponse);
     }
 
-    @PostMapping(value = "/images")
-    public ResponseEntity<?> createImage(
-            @RequestHeader("X-Account-Id") String account,
-            @RequestBody ImageRequest image) {
-        Image img = imageService.createImage(account, image.label, image.url, true);
+    @PostMapping(value = "/images", consumes = { "multipart/form-data" })
+    public ResponseEntity<?> createImage(@RequestHeader("X-Account-Id") String account,
+                                         @ModelAttribute ImageRequest image) throws IOException {
+        if (image.url == null && image.file == null) {
+            return ResponseEntity.badRequest().body("File or Url must be provided.");
+        }
+        Image img = imageService.createImage(account, image.label, image.url, image.file, true);
         if (img == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -82,6 +85,7 @@ public class ImageController {
     private static class ImageRequest {
         String label;
         String url;
+        MultipartFile file;
         Boolean detection;
     }
 }

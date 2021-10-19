@@ -2,22 +2,27 @@ package com.collager.images.service;
 
 import com.collager.images.ImagesApplication;
 import com.collager.images.entity.Image;
+import com.collager.images.property.FileStorageProperties;
 import com.collager.images.repository.ImageRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class ImageService {
     private static final Logger log= LogManager.getLogger(ImagesApplication.class);
 
     private final ImageRepository imageRepository;
+    private final String fileUploadLocation;
 
-    public ImageService(ImageRepository imageRepository) {
+    public ImageService(ImageRepository imageRepository, FileStorageProperties fileStorageProperties) {
         this.imageRepository = imageRepository;
+        this.fileUploadLocation = fileStorageProperties.getUploadDir();
     }
 
     public Image getImage(String account, String Id) {
@@ -36,9 +41,15 @@ public class ImageService {
         }
         return new ArrayList<>(images);
     }
-    public Image createImage(String accountId, String label, String url, boolean detection){
+
+    public Image createImage(String accountId, String label, String url, MultipartFile file, boolean detection) throws IOException {
         Image img = new Image();
-        img.setUrl(url);
+
+        if (file != null){
+            img.setUrl(uploadFile(file));
+        } else {
+            img.setUrl(url);
+        }
         // TODO: Generate Label if needed
         img.setLabel(label);
         img.setAccount(accountId);
@@ -55,5 +66,11 @@ public class ImageService {
     public void removeImage(String acct, String id) {
         imageRepository.deleteById(UUID.fromString(id));
         log.info("Image " + id +" removed from account " + acct);
+    }
+
+    private String uploadFile(MultipartFile f) throws IOException {
+        String dest = this.fileUploadLocation + f.getOriginalFilename();
+        f.transferTo(new File(dest));
+        return dest;
     }
 }
