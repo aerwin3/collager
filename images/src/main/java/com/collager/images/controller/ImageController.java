@@ -15,7 +15,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.*;
 
 @Controller
@@ -48,11 +47,11 @@ public class ImageController {
 
     @PostMapping(value = "/images", consumes = { "multipart/form-data" })
     public ResponseEntity<?> createImage(@RequestHeader("X-Account-Id") String account,
-                                         @ModelAttribute ImageRequest image) throws IOException {
+                                         @ModelAttribute ImageRequest image) {
         if (image.url == null && image.file == null) {
             return ResponseEntity.badRequest().body("File or Url must be provided.");
         }
-        Image img = imageService.createImage(account, image.label, image.url, image.file, true);
+        Image img = imageService.createImage(account, image.label, image.url, image.file, image.detection);
         if (img == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -74,7 +73,7 @@ public class ImageController {
     public ResponseEntity<?> deleteImage(
             @RequestHeader(value = "X-Account-Id") String account,
             @PathVariable String id) {
-        imageService.removeImage(account, id);
+        imageService.removeImage(id);
         return ResponseEntity.noContent().build();
     }
 
