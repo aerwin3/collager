@@ -10,13 +10,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.web.multipart.MultipartFile;
 
 
-import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -29,10 +27,10 @@ public class ImageServiceTests {
 
     private ImageService imageService;
 
-    @Autowired
+    @Mock
     private GCPAdapter gcpAdapter;
 
-    @Autowired
+    @Mock
     private ImaggaAdapter imaggaAdapter;
 
     @Mock
@@ -42,26 +40,26 @@ public class ImageServiceTests {
     private MultipartFile multipartFile;
 
     @BeforeEach
-    public void initTest(){
+    public void initTest() {
         imageService = new ImageService(imageRepository, gcpAdapter, imaggaAdapter);
     }
 
     @Test
-    public void getImageTest(){
+    public void getImageTest() {
         UUID uuid = UUID.randomUUID();
-        when(imageRepository.getById("acct", uuid)).thenReturn(new Image(uuid,"acct","label", "url", null));
+        when(imageRepository.getById("acct", uuid)).thenReturn(new Image(uuid, "acct", "label", "url", null));
         assertEquals(uuid, imageService.getImage("acct", uuid.toString()).getId());
     }
 
     @Test
-    public void getImageNotFoundTest(){
+    public void getImageNotFoundTest() {
         UUID uuid = UUID.randomUUID();
-        when(imageRepository.getById(uuid)).thenReturn(null);
+        when(imageRepository.getById("acct", uuid)).thenReturn(null);
         assertNull(imageService.getImage("acct", uuid.toString()));
     }
 
     @Test
-    public void deleteImageTest(){
+    public void deleteImageTest() {
         UUID uuid = UUID.randomUUID();
         imageService.removeImage(uuid.toString());
         verify(imageRepository, Mockito.times(1)).deleteById(uuid);
@@ -70,8 +68,12 @@ public class ImageServiceTests {
     @Test
     public void createImageMultipartFile() throws IOException {
         Image img = new Image();
+        img.setId(UUID.randomUUID());
         when(imageRepository.save(any())).thenReturn(img);
-        imageService.createImage("a","label", "", multipartFile, true);
-        verify(multipartFile, Mockito.times(1)).transferTo(any(File.class));
+        when(gcpAdapter.upload(any(), any())).thenReturn("tag");
+        when(imaggaAdapter.getObjects(any())).thenReturn("");
+        imageService.createImage("a", "label", "", multipartFile, true);
+        verify(multipartFile, Mockito.times(1)).getBytes();
     }
+
 }

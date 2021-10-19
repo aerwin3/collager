@@ -3,6 +3,8 @@ package com.collager.images.service;
 import com.collager.images.ImagesApplication;
 import com.collager.images.adapter.GCPAdapter;
 import com.collager.images.adapter.ImaggaAdapter;
+import com.collager.images.adapter.ObjectsAdapter;
+import com.collager.images.adapter.StorageAdapter;
 import com.collager.images.entity.Image;
 import com.collager.images.repository.ImageRepository;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -23,8 +25,8 @@ public class ImageService {
     private static final Logger log= LogManager.getLogger(ImagesApplication.class);
 
     private final ImageRepository imageRepository;
-    private final GCPAdapter gcpAdapter;
-    private final ImaggaAdapter imaggaAdapter;
+    private final StorageAdapter gcpAdapter;
+    private final ObjectsAdapter imaggaAdapter;
 
     public ImageService(ImageRepository imageRepository,
                         GCPAdapter gcpAdapter,
@@ -84,7 +86,7 @@ public class ImageService {
         // Detect Objects in image
         if (detection) {
             String objs = imaggaAdapter.getObjects(img.getUrl());
-            if (!objs.isEmpty()) {
+            if ( objs != null && !objs.isEmpty()) {
                 img.setObjects(objs);
                 imageRepository.save(img);
             }

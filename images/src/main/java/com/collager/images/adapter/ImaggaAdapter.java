@@ -21,7 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Getter
 @Setter
 @Component
-public class ImaggaAdapter {
+public class ImaggaAdapter implements ObjectsAdapter{
 
     WebClient client;
 

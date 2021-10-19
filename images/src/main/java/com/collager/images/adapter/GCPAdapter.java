@@ -16,7 +16,7 @@ import java.io.IOException;
 @Getter
 @Setter
 @Component
-public class GCPAdapter {
+public class GCPAdapter implements StorageAdapter{
 
     Storage storage;
     GCPStorageProperties properties;
