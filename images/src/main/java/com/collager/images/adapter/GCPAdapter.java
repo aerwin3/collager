@@ -11,7 +11,6 @@ import lombok.Setter;
 import org.springframework.stereotype.Component;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 @Getter
@@ -38,9 +37,9 @@ public class GCPAdapter {
     public String upload(String name, byte[] data) {
         try {
             BlobInfo blobInfo = storage.create(
-                    BlobInfo.newBuilder(this.properties.getBucketName(), name).build(), //get original file name
-                    data, // the file
-                    BlobTargetOption.predefinedAcl(PredefinedAcl.PUBLIC_READ) // Set file permission
+                    BlobInfo.newBuilder(this.properties.getBucketName(), name).build(),
+                    data,
+                    BlobTargetOption.predefinedAcl(PredefinedAcl.PUBLIC_READ)
             );
             return blobInfo.getMediaLink(); // Return file url
         }catch(IllegalStateException e){

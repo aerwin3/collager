@@ -2,22 +2,20 @@ package com.collager.images.service;
 
 import com.collager.images.ImagesApplication;
 import com.collager.images.adapter.GCPAdapter;
+import com.collager.images.adapter.ImaggaAdapter;
 import com.collager.images.entity.Image;
-import com.collager.images.property.FileStorageProperties;
-import com.collager.images.property.GCPStorageProperties;
 import com.collager.images.repository.ImageRepository;
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.time.Instant;
 import java.util.*;
 
 @Service
@@ -25,15 +23,15 @@ public class ImageService {
     private static final Logger log= LogManager.getLogger(ImagesApplication.class);
 
     private final ImageRepository imageRepository;
-    private final FileStorageProperties fileStorageProperties;
-
-    @Autowired
-    private GCPAdapter gcpAdapter;
+    private final GCPAdapter gcpAdapter;
+    private final ImaggaAdapter imaggaAdapter;
 
     public ImageService(ImageRepository imageRepository,
-                        FileStorageProperties fileStorageProperties) {
+                        GCPAdapter gcpAdapter,
+                        ImaggaAdapter imaggaAdapter) {
         this.imageRepository = imageRepository;
-        this.fileStorageProperties = fileStorageProperties;
+        this.gcpAdapter = gcpAdapter;
+        this.imaggaAdapter = imaggaAdapter;
     }
 
     public Image getImage(String account, String Id) {
@@ -53,30 +51,49 @@ public class ImageService {
         return new ArrayList<>(images);
     }
 
-    public Image createImage(String accountId, String label, String url, MultipartFile file, boolean detection) throws IOException {
+    public Image createImage(String accountId, String label, String url, MultipartFile file, boolean detection) {
         Image img = new Image();
+
+        // Generate random label
+        if (label == null)
+            label = DigestUtils.sha256Hex(String.valueOf(Instant.now().toEpochMilli()));
+
+        // Store image
         try{
             img.setLabel(label);
             img.setAccount(accountId);
             img = imageRepository.save(img);
-            log.info("Image Created :: " + img);
        }catch (Exception e){
            log.error(e);
            return null;
        }
-        if (file != null){
-            img.setUrl( uploadFile(img.getId().toString(), file));
-        } else {
-            img.setUrl(uploadFromUrl(img.getId().toString(), url));
-        }
-        imageRepository.save(img);
 
+        // Upload file to GCP and store the media link for downloading
+        try {
+            if (file != null) {
+                img.setUrl(uploadFile(img.getId().toString(), file));
+            } else {
+                img.setUrl(uploadFromUrl(img.getId().toString(), url));
+            }
+            imageRepository.save(img);
+        } catch (IOException e){
+            log.error("Error uploading file for storage.", e);
+        }
+        log.info("Image Created :: " + img);
+
+        // Detect Objects in image
+        if (detection) {
+            String objs = imaggaAdapter.getObjects(img.getUrl());
+            if (!objs.isEmpty()) {
+                img.setObjects(objs);
+                imageRepository.save(img);
+            }
+        }
         return img;
     }
 
-    public void removeImage(String acct, String id) {
+    public void removeImage(String id) {
         imageRepository.deleteById(UUID.fromString(id));
-        log.info("Image " + id +" removed from account " + acct);
     }
 
     private String uploadFile(String name, MultipartFile f) throws IOException {

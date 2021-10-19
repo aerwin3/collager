@@ -7,10 +7,10 @@ import org.springframework.stereotype.Component;
 
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "file")
+@ConfigurationProperties(prefix = "imagga")
 @Component
-public class FileStorageProperties {
-    private String uploadDir;
-    private Integer downloadTimeout;
-    private Integer downloadReadTimeout;
+public class ImaggaProperties {
+    private String apiEndpoint;
+    private String key;
+    private String secret;
 }
