@@ -29,12 +29,11 @@ public class Image {
     @Column(name="label", nullable = false)
     private String label;
 
-    @Column(name="url", nullable = false)
+    @Column(name="url")
     private String url;
 
-    @OneToMany(mappedBy="image", cascade = CascadeType.ALL)
-    @OrderBy("name ASC")
-    private List<Tag> objects;
+    @Column(name="objects")
+    private String objects;
 
     @Override
     public boolean equals(Object o) {

@@ -1,7 +1,6 @@
 package com.collager.images.repository;
 
 import com.collager.images.entity.Image;
-import com.collager.images.entity.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,19 +10,19 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @ExtendWith(SpringExtension.class)
 @DataJpaTest()
 @AutoConfigureTestDatabase(replace= AutoConfigureTestDatabase.Replace.NONE)
-@TestPropertySource("/application.properties")
+@TestPropertySource("/test-application.properties")
 public class ImageRepositoryTests {
-    @Autowired
-    private TestEntityManager entityManager;
 
+    @Autowired
+    TestEntityManager entityManager;
 
     @Autowired
     ImageRepository imageRepository;
@@ -56,21 +55,35 @@ public class ImageRepositoryTests {
     }
 
     @Test
-    public void testThisOut(){
-        Image img1 = new Image();
-        img1.setAccount("testId");
-        img1.setLabel("testLabel1");
-        img1.setUrl("img_url1");
-        Tag t = new Tag();
-        t.setName("book");
-        List<Tag> tags = Arrays.asList(t);
-        img1.setObjects(tags);
-        imageRepository.save(img1);
+    public void testFindImagesByObject(){
+        for (int i=0; i<2; i++){
+            Image img = new Image();
+            img.setAccount("a");
+            img.setLabel("testLabel"+i);
+            img.setUrl("img_url"+i);
+            img.setObjects("book,apple");
+            imageRepository.save(img);
+        }
 
-        entityManager.flush();
-        entityManager.clear();
-        List<Image> imgs = imageRepository.findImagesByObjects(img1.getAccount(), Arrays.asList("book"));
-        assertEquals(1, imgs.size());
+
+        List<Image> imgs = imageRepository.findImagesByObject("a", "book");
+        assertEquals(2, imgs.size());
+    }
+
+    @Test
+    public void testDeleteById(){
+        Image img = new Image();
+        img.setAccount("a");
+        img.setLabel("testLabel");
+        img.setUrl("img_url");
+        img.setObjects("book,apple");
+        img = imageRepository.save(img);
+
+        Image i = imageRepository.getById("a", img.getId());
+        imageRepository.deleteById(img.getId());
+        Image k = imageRepository.getById("a", img.getId());
+        assertEquals(i.getId(), img.getId());
+        assertNull(k);
     }
 
 }

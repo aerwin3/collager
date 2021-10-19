@@ -1,56 +1,91 @@
 package com.collager.images.controller;
 
+import com.collager.images.ImagesApplication;
 import com.collager.images.entity.Image;
 import com.collager.images.service.ImageService;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
 
 @Controller
 public class ImageController {
 
+
     private ImageService imageService;
 
-    public ImageController(ImageService imageService){
+    private static final Logger log = LogManager.getLogger(ImagesApplication.class);
+
+    public ImageController(ImageService imageService) {
         super();
-        this.imageService=imageService;
+        this.imageService = imageService;
     }
 
-    @GetMapping(value="/images", produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody HashMap<String, Object> listImages(
-            @RequestHeader("X-Account-Id") String account,
-            @RequestParam HashMap<String, Object> params) {
+    @GetMapping(value = "/images", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> listImages(@RequestHeader("X-Account-Id") String account,
+                                        @RequestParam HashMap<String, Object> params) {
         HashMap<String, Object> imageResponse = new HashMap<>();
-        List<Image> images= new ArrayList<>();
-        if (params.get("id") != null){
-            images.add(imageService.getImage(account, params.get("id").toString()));
+        Set<Image> images = new HashSet<>();
+        if (params.get("objects") != null) {
+            List<String> objs = Arrays.asList(params.get("objects").toString().split(","));
+            images.addAll(imageService.getImagesByObjects(account, objs));
         } else {
             images.addAll(imageService.getImagesByAccount(account));
         }
         imageResponse.put("items", images);
-        return imageResponse;
+        return ResponseEntity.ok(imageResponse);
     }
 
-    @PostMapping(value="/images", produces = MediaType.APPLICATION_JSON_VALUE)
-    public @ResponseBody Image createImage(
+    @PostMapping(value = "/images", consumes = { "multipart/form-data" })
+    public ResponseEntity<?> createImage(@RequestHeader("X-Account-Id") String account,
+                                         @ModelAttribute ImageRequest image) throws IOException {
+        if (image.url == null && image.file == null) {
+            return ResponseEntity.badRequest().body("File or Url must be provided.");
+        }
+        Image img = imageService.createImage(account, image.label, image.url, image.file, true);
+        if (img == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(img);
+    }
+
+    @GetMapping(value = "/images/{id}")
+    public ResponseEntity<?> getImage(
             @RequestHeader("X-Account-Id") String account,
-            @RequestBody ImageRequest image){
-        return imageService.createImage(account, image.label, image.url, image.detection);
+            @PathVariable String id) {
+        Image img = imageService.getImage(account, id);
+        if (img == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(img);
+    }
+
+    @DeleteMapping(value = "/images/{id}")
+    public ResponseEntity<?> deleteImage(
+            @RequestHeader(value = "X-Account-Id") String account,
+            @PathVariable String id) {
+        imageService.removeImage(account, id);
+        return ResponseEntity.noContent().build();
     }
 
     @Getter
     @Setter
+    @ToString
     @AllArgsConstructor
     private static class ImageRequest {
         String label;
         String url;
+        MultipartFile file;
         Boolean detection;
     }
 }
