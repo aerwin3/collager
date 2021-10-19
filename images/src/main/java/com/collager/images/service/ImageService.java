@@ -4,6 +4,7 @@ import com.collager.images.ImagesApplication;
 import com.collager.images.entity.Image;
 import com.collager.images.property.FileStorageProperties;
 import com.collager.images.repository.ImageRepository;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.*;
 
 @Service
@@ -18,11 +20,11 @@ public class ImageService {
     private static final Logger log= LogManager.getLogger(ImagesApplication.class);
 
     private final ImageRepository imageRepository;
-    private final String fileUploadLocation;
+    private final FileStorageProperties fileStorageProperties;
 
     public ImageService(ImageRepository imageRepository, FileStorageProperties fileStorageProperties) {
         this.imageRepository = imageRepository;
-        this.fileUploadLocation = fileStorageProperties.getUploadDir();
+        this.fileStorageProperties = fileStorageProperties;
     }
 
     public Image getImage(String account, String Id) {
@@ -48,7 +50,7 @@ public class ImageService {
         if (file != null){
             img.setUrl(uploadFile(file));
         } else {
-            img.setUrl(url);
+            img.setUrl(uploadFromUrl(url));
         }
         // TODO: Generate Label if needed
         img.setLabel(label);
@@ -69,8 +71,18 @@ public class ImageService {
     }
 
     private String uploadFile(MultipartFile f) throws IOException {
-        String dest = this.fileUploadLocation + f.getOriginalFilename();
+        String dest = this.fileStorageProperties.getUploadDir() + f.getOriginalFilename();
         f.transferTo(new File(dest));
+        return dest;
+    }
+
+    private String uploadFromUrl(String url) throws IOException {
+        String dest = this.fileStorageProperties.getUploadDir() + "tmpfile";
+        FileUtils.copyURLToFile(
+                new URL(url),
+                new File(dest),
+                this.fileStorageProperties.getDownloadTimeout(),
+                this.fileStorageProperties.getDownloadReadTimeout());
         return dest;
     }
 }
