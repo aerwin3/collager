@@ -10,17 +10,17 @@ CREATE TABLE IF NOT EXISTS public.spring_session
     CONSTRAINT spring_session_pk PRIMARY KEY (primary_id)
 ) TABLESPACE pg_default;
 
-CREATE UNIQUE INDEX spring_session_ix1
+CREATE UNIQUE INDEX IF NOT EXISTS spring_session_ix1
     ON public.spring_session USING btree
         (session_id COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
 
-CREATE INDEX spring_session_ix2
+CREATE INDEX IF NOT EXISTS spring_session_ix2
     ON public.spring_session USING btree
         (expiry_time ASC NULLS LAST)
     TABLESPACE pg_default;
 
-CREATE INDEX spring_session_ix3
+CREATE INDEX IF NOT EXISTS spring_session_ix3
     ON public.spring_session USING btree
         (principal_name COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;

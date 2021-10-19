@@ -7,10 +7,9 @@ import org.springframework.stereotype.Component;
 
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "file")
+@ConfigurationProperties(prefix = "gcp")
 @Component
-public class FileStorageProperties {
-    private String uploadDir;
-    private Integer downloadTimeout;
-    private Integer downloadReadTimeout;
+public class GCPStorageProperties {
+    private String bucketName;
+    private String credentials;
 }

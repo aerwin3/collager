@@ -4,6 +4,6 @@ CREATE TABLE IF NOT EXISTS images (
     account character varying(255) COLLATE pg_catalog."default" NOT NULL,
     label character varying(255) COLLATE pg_catalog."default" NOT NULL,
     objects character varying(255) COLLATE pg_catalog."default",
-    url character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    url character varying(255) COLLATE pg_catalog."default",
     CONSTRAINT images_pkey PRIMARY KEY (id)
 );

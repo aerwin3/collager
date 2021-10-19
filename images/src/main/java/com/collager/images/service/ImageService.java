@@ -1,17 +1,22 @@
 package com.collager.images.service;
 
 import com.collager.images.ImagesApplication;
+import com.collager.images.adapter.GCPAdapter;
 import com.collager.images.entity.Image;
 import com.collager.images.property.FileStorageProperties;
+import com.collager.images.property.GCPStorageProperties;
 import com.collager.images.repository.ImageRepository;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.*;
 
@@ -22,7 +27,11 @@ public class ImageService {
     private final ImageRepository imageRepository;
     private final FileStorageProperties fileStorageProperties;
 
-    public ImageService(ImageRepository imageRepository, FileStorageProperties fileStorageProperties) {
+    @Autowired
+    private GCPAdapter gcpAdapter;
+
+    public ImageService(ImageRepository imageRepository,
+                        FileStorageProperties fileStorageProperties) {
         this.imageRepository = imageRepository;
         this.fileStorageProperties = fileStorageProperties;
     }
@@ -46,22 +55,22 @@ public class ImageService {
 
     public Image createImage(String accountId, String label, String url, MultipartFile file, boolean detection) throws IOException {
         Image img = new Image();
-
-        if (file != null){
-            img.setUrl(uploadFile(file));
-        } else {
-            img.setUrl(uploadFromUrl(url));
-        }
-        // TODO: Generate Label if needed
-        img.setLabel(label);
-        img.setAccount(accountId);
         try{
+            img.setLabel(label);
+            img.setAccount(accountId);
             img = imageRepository.save(img);
             log.info("Image Created :: " + img);
        }catch (Exception e){
            log.error(e);
            return null;
        }
+        if (file != null){
+            img.setUrl( uploadFile(img.getId().toString(), file));
+        } else {
+            img.setUrl(uploadFromUrl(img.getId().toString(), url));
+        }
+        imageRepository.save(img);
+
         return img;
     }
 
@@ -70,19 +79,22 @@ public class ImageService {
         log.info("Image " + id +" removed from account " + acct);
     }
 
-    private String uploadFile(MultipartFile f) throws IOException {
-        String dest = this.fileStorageProperties.getUploadDir() + f.getOriginalFilename();
-        f.transferTo(new File(dest));
-        return dest;
+    private String uploadFile(String name, MultipartFile f) throws IOException {
+        return this.gcpAdapter.upload(name, f.getBytes());
     }
 
-    private String uploadFromUrl(String url) throws IOException {
-        String dest = this.fileStorageProperties.getUploadDir() + "tmpfile";
-        FileUtils.copyURLToFile(
-                new URL(url),
-                new File(dest),
-                this.fileStorageProperties.getDownloadTimeout(),
-                this.fileStorageProperties.getDownloadReadTimeout());
-        return dest;
+    private String uploadFromUrl(String name, String location) throws IOException {
+        URL url = new URL(location);
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+
+        try (InputStream inputStream = url.openStream()) {
+            int n = 0;
+            byte [] buffer = new byte[ 1024 ];
+            while (-1 != (n = inputStream.read(buffer))) {
+                output.write(buffer, 0, n);
+            }
+        }
+
+        return this.gcpAdapter.upload(name, output.toByteArray());
     }
 }

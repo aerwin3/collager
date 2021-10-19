@@ -29,7 +29,7 @@ public class Image {
     @Column(name="label", nullable = false)
     private String label;
 
-    @Column(name="url", nullable = false)
+    @Column(name="url")
     private String url;
 
     @Column(name="objects")

@@ -2,6 +2,7 @@ package com.collager.images.service;
 
 import com.collager.images.entity.Image;
 import com.collager.images.property.FileStorageProperties;
+import com.collager.images.property.GCPStorageProperties;
 import com.collager.images.repository.ImageRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,9 @@ public class ImageServiceTests {
 
     @Autowired
     private FileStorageProperties fileStorageProperties;
+
+    @Autowired
+    private GCPStorageProperties gcpStorageProperties;
 
     @Mock
     private ImageRepository imageRepository;
