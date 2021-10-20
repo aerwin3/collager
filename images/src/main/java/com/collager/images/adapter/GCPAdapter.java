@@ -1,17 +1,12 @@
 package com.collager.images.adapter;
 
 import com.collager.images.property.GCPStorageProperties;
-import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.*;
 import com.google.cloud.storage.Storage.BlobTargetOption;
 import com.google.cloud.storage.Storage.PredefinedAcl;
-import com.google.common.collect.Lists;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.stereotype.Component;
-
-import java.io.FileInputStream;
-import java.io.IOException;
 
 @Getter
 @Setter
@@ -21,10 +16,8 @@ public class GCPAdapter implements StorageAdapter{
     Storage storage;
     GCPStorageProperties properties;
 
-    public GCPAdapter(GCPStorageProperties gcpStorageProperties) throws IOException {
-        GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream(gcpStorageProperties.getCredentials()))
-                .createScoped(Lists.newArrayList("https://www.googleapis.com/auth/cloud-platform"));
-        this.storage = StorageOptions.newBuilder().setCredentials(credentials).build().getService();
+    public GCPAdapter(GCPStorageProperties gcpStorageProperties) {
+        this.storage = StorageOptions.getDefaultInstance().getService();
         this.properties = gcpStorageProperties;
 
         Bucket bucket = storage.get(gcpStorageProperties.getBucketName(),

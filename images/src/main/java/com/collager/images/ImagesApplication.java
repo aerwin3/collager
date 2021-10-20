@@ -15,7 +15,7 @@ public class ImagesApplication {
     private static final Logger log = LogManager.getLogger(ImagesApplication.class);
 
     public static void main(String[] args) {
-        log.info("Starting Up Collager Service");
+        log.info("Starting Up Collager Service" );
         SpringApplication.run(ImagesApplication.class, args);
     }
 
