@@ -96,6 +96,9 @@ public class ImageService {
 
     public void removeImage(String id) {
         imageRepository.deleteById(UUID.fromString(id));
+        if (!gcpAdapter.remove(id)){
+            log.warn("Object was not deleted.("+ id +")");
+        };
     }
 
     private String uploadFile(String name, MultipartFile f) throws IOException {
