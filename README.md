@@ -122,7 +122,7 @@ In order to run this application there are a couple pre-reqs
 - A key.json file for a service account for an application in [GCP](https://console.cloud.google.com/apis/credentials/serviceaccountkey) must be place in the root of the project with the name `gcp-credentials.json`
 - Update the docker-compose.yml with a name for the gcp bucket that will hold the images
 
-##Build and running steps
+## Build and running steps
 - Package the spring boot app `mvn package -DskipTests` at the root of the project.
 - Build the docker image `docker build . --tag collager.v1`
 - Standup the application `docker-compose up -d` (This will run all the containers needed to support the application)
