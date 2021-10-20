@@ -39,4 +39,10 @@ public class GCPAdapter implements StorageAdapter{
             throw new RuntimeException(e);
         }
     }
+
+    @Override
+    public boolean remove(String id) {
+        return storage.delete(properties.getBucketName(), id);
+    }
+
 }
